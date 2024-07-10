@@ -22,7 +22,7 @@ commands:
       - run:
           name: inspect << parameters.image-tag >>
           command: |
-            CNTR_ID=$(docker container ls --filter="ancestor=<< parameters.image-tag >>" --quiet)
+            CNTR_ID=$(docker ps --filter="ancestor=<< parameters.image-tag >>" --quiet)
             docker container inspect $CNTR_ID | jq -r ".[0].NetworkSettings.Networks"
 
 jobs:
