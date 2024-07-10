@@ -19,6 +19,15 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: false
       - run: docker ps
+      - run:
+          name: find pause container
+          command: |
+            CNTR_ID_PAUSE=$(docker container ls --filter="ancestor=public.ecr.aws/eks-distro/kubernetes/pause:3.6" --quiet)
+            echo "export CNTR_ID_PAUSE=${CNTR_ID_PAUSE}" >> $BASH_ENV
+      - run:
+          name: kill pause container
+          command: |
+            docker kill $CNTR_ID_PAUSE
 
 workflows:
   explore:
