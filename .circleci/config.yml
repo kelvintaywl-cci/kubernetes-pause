@@ -12,6 +12,19 @@ executors:
       - image: redis:7.4-rc-alpine
     resource_class: large
 
+commands:
+  inspect-container-network:
+    parameters:
+      image-tag:
+        type: string
+        description: image:tag to look up container (via ancestor filter)
+    steps:
+      - run:
+          name: inspect << parameters.image-tag >>
+          command: |
+            CNTR_ID=$(docker container ls --filter="ancestor=<< parameters.image-tag >>" --quiet)
+            docker container inspect $CNTR_ID | jq -r ".[0].NetworkSettings.Networks"
+
 jobs:
   multiimage:
     executor: multiimage
@@ -19,6 +32,13 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: false
       - run: docker ps
+      - run: docker network ls
+      - inspect-container-network:
+          image-tag: "cimg/base:current"
+      - inspect-container-network:
+          image-tag: "postgres:13.10"
+      - inspect-container-network:
+          image-tag: "redis:7.4-rc-alpine"
       - run:
           name: find pause container
           command: |
