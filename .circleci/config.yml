@@ -25,9 +25,13 @@ jobs:
             CNTR_ID_PAUSE=$(docker container ls --filter="ancestor=public.ecr.aws/eks-distro/kubernetes/pause:3.6" --quiet)
             echo "export CNTR_ID_PAUSE=${CNTR_ID_PAUSE}" >> $BASH_ENV
       - run:
-          name: kill pause container
+          name: test connection to Postgres
           command: |
-            docker kill $CNTR_ID_PAUSE
+            dockerize -wait tcp://127.0.0.1:5432 -timeout 1m
+      - run:
+          name: test connection to Redis
+          command: |
+            dockerize -wait tcp://127.0.0.1:6379 -timeout 1m
 
 workflows:
   explore:
