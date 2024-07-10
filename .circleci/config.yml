@@ -11,6 +11,14 @@ executors:
           POSTGRES_PASSWORD: Willy
       - image: redis:7.4-rc-alpine
     resource_class: large
+  singleimage:
+    docker:
+      - image: cimg/base:current
+        environment:
+          POSTGRES_DB: wiki
+          POSTGRES_USER: Free
+          POSTGRES_PASSWORD: Willy
+    resource_class: large
 
 commands:
   inspect-container-network:
@@ -52,8 +60,40 @@ jobs:
           name: test connection to Redis
           command: |
             dockerize -wait tcp://127.0.0.1:6379 -timeout 1m
-
+  pass-env-vars-sidecar:
+    executor: singleimage
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run:
+          name: find current job container ID
+          command: |
+            echo "export CNTR_ID_MAIN=$(docker ps --filter='ancestor=cimg/base:current' --quiet)" >> $BASH_ENV
+      - run:
+          name: Spin up DB
+          command: |
+            # attach our sidecar DB container into the same network as our main job container, so they can communicate "locally"
+            # NOTE: we are passing the env vars directly from the job container to our sidecar container
+            docker container run --name=db --network "container:$CNTR_ID_MAIN" -e POSTGRES_DB -e POSTGRES_USER -e POSTGRES_PASSWORD --detach postgres:13.10
+      - run:
+          name: DB logs (tailed)
+          command: docker container logs --follow db
+          background: true
+      - run:
+          name: Wait for DB to be ready
+          command: |
+            dockerize -wait tcp://127.0.0.1:5432 -timeout 1m
+      - checkout
+      - run:
+          name: Insert records
+          command: |
+            psql -h 127.0.0.1 -p 5432 -d $POSTGRES_DB -U $POSTGRES_USER -f schema.sql
+      - run:
+          name: Check table
+          command: |
+            psql -h 127.0.0.1 -p 5432 -d $POSTGRES_DB -U $POSTGRES_USER -c "SELECT * FROM characters;"
 workflows:
   explore:
     jobs:
       - multiimage
+      - pass-env-vars-sidecar
