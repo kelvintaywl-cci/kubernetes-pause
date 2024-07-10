@@ -1,0 +1,24 @@
+version: 2.1
+
+executors:
+  multiimage:
+    docker:
+      - image: cimg/base:current
+      - image: postgres:13.10
+        environment:
+          POSTGRES_DB: wiki
+          POSTGRES_USER: Free
+          POSTGRES_PASSWORD: Willy
+      - image: redis:7.4-rc-alpine
+    resource_class: large
+
+jobs:
+  multiimage:
+    executor: multiimage
+    steps:
+      - run: docker ps
+
+workflows:
+  explore:
+    jobs:
+      - multiimage
