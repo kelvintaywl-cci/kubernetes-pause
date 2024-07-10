@@ -92,8 +92,25 @@ jobs:
           name: Check table
           command: |
             psql -h 127.0.0.1 -p 5432 -d $POSTGRES_DB -U $POSTGRES_USER -c "SELECT * FROM characters;"
+  docker-compose-connect:
+    executor: singleimage
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - checkout
+      - run:
+          name: get network name of pause container
+          command: |
+            # get container ID of pause container
+            CNTR_ID_PAUSE=$(docker container ls --filter="ancestor=public.ecr.aws/eks-distro/kubernetes/pause:3.6" --quiet)
+
+            docker container inspect $CNTR_ID_PAUSE | jq -r ".[0].NetworkSettings.Networks|to_entries"
+      - run: cat docker-compose.yml
+          
+
 workflows:
   explore:
     jobs:
-      - multiimage
-      - pass-env-vars-sidecar
+      # - multiimage
+      # - pass-env-vars-sidecar
+      - docker-compose-connect
