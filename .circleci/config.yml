@@ -122,6 +122,7 @@ jobs:
           # NOTE: i refer to the container name (redis) since that is the DNS record
           command: |
             dockerize -wait tcp://redis:6379 -timeout 1m
+      - run: echo "export PGPASSWORD=Willy" >> $BASH_ENV
       - run:
           name: Insert records
           command: |
