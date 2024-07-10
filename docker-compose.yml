@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13.10
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_DB: wiki
+      POSTGRES_USER: Free
+      POSTGRES_PASSWORD: Willy
+      PGPASSWORD: Willy
+    ports:
+    - "5432:5432" 
+    networks:
+    - pause
+  redis:
+    image: redis:7.4-rc-alpine
+    container_name: redis
+    restart: always
+    ports:
+    - "6379:6379"
+    networks:
+    - pause
