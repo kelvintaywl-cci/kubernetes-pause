@@ -104,8 +104,32 @@ jobs:
             # get container ID of pause container
             CNTR_ID_PAUSE=$(docker container ls --filter="ancestor=public.ecr.aws/eks-distro/kubernetes/pause:3.6" --quiet)
 
-            docker container inspect $CNTR_ID_PAUSE | jq -r ".[0].NetworkSettings.Networks|to_entries"
+            NETWORK_NAME_PAUSE=$(docker container inspect $CNTR_ID_PAUSE | jq -r ".[0].NetworkSettings.Networks|to_entries|.[0].key")
+
+            echo $NETWORK_NAME_PAUSE
+            echo "export NETWORK_NAME_PAUSE=${NETWORK_NAME_PAUSE}" >> $BASH_ENV
+      - run: yq -i '.networks.pause.name = "$NETWORK_NAME_PAUSE"' docker-compose.yml
+      - run: yq -i '.networks.pause.external = true' docker-compose.yml
       - run: cat docker-compose.yml
+      - run: docker-compose up -d
+      - run:
+          name: Wait for DB to be ready
+          # NOTE: i refer to the container name (db) since that is the DNS record
+          command: |
+            dockerize -wait tcp://db:5432 -timeout 1m
+      - run:
+          name: Wait for Redis to be ready
+          # NOTE: i refer to the container name (redis) since that is the DNS record
+          command: |
+            dockerize -wait tcp://redis:6379 -timeout 1m
+      - run:
+          name: Insert records
+          command: |
+            psql -h db -p 5432 -d wiki -U Free -f schema.sql
+      - run:
+          name: Check records
+          command: |
+            psql -h db -p 5432 -d wiki -U Free -c "SELECT * FROM characters;"
           
 
 workflows:
