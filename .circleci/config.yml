@@ -108,8 +108,8 @@ jobs:
 
             echo $NETWORK_NAME_PAUSE
             echo "export NETWORK_NAME_PAUSE=${NETWORK_NAME_PAUSE}" >> $BASH_ENV
-      - run: yq -i '.networks.pause.name = "$NETWORK_NAME_PAUSE"' docker-compose.yml
-      - run: yq -i '.networks.pause.external = true' docker-compose.yml
+      - run: yq eval ".networks.pause.name = \"$NETWORK_NAME_PAUSE\"" -i docker-compose.yml
+      - run: yq eval '.networks.pause.external = true' -i docker-compose.yml
       - run: cat docker-compose.yml
       - run: docker-compose up -d
       - run:
