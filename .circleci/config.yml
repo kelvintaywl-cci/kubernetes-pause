@@ -74,7 +74,7 @@ jobs:
           command: |
             # attach our sidecar DB container into the same network as our main job container, so they can communicate "locally"
             # NOTE: we are passing the env vars directly from the job container to our sidecar container
-            docker container run --name=db --network "container:$CNTR_ID_MAIN" -e POSTGRES_DB -e POSTGRES_USER -e POSTGRES_PASSWORD -p 15432:5432 --detach postgres:13.10
+            docker container run --name=db --network "container:$CNTR_ID_MAIN" -e POSTGRES_DB -e POSTGRES_USER -e POSTGRES_PASSWORD --detach postgres:13.10
       - run:
           name: DB logs (tailed)
           command: docker container logs --follow db
@@ -82,16 +82,16 @@ jobs:
       - run:
           name: Wait for DB to be ready
           command: |
-            dockerize -wait tcp://127.0.0.1:15432 -timeout 1m
+            dockerize -wait tcp://127.0.0.1:5432 -timeout 1m
       - checkout
       - run:
           name: Insert records
           command: |
-            psql -h 127.0.0.1 -p 15432 -d $POSTGRES_DB -U $POSTGRES_USER -f schema.sql
+            psql -h 127.0.0.1 -p 5432 -d $POSTGRES_DB -U $POSTGRES_USER -f schema.sql
       - run:
           name: Check table
           command: |
-            psql -h 127.0.0.1 -p 15432 -d $POSTGRES_DB -U $POSTGRES_USER -c "SELECT * FROM characters;"
+            psql -h 127.0.0.1 -p 5432 -d $POSTGRES_DB -U $POSTGRES_USER -c "SELECT * FROM characters;"
   docker-compose-connect:
     executor: singleimage
     steps:
