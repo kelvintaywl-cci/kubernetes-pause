@@ -82,7 +82,8 @@ jobs:
       - run:
           name: Wait for DB to be ready
           command: |
-            dockerize -wait tcp://db:5432 -timeout 1m
+            sleep 30
+            docker ps
       - checkout
       - run:
           name: Insert records
