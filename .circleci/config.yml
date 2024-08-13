@@ -137,5 +137,5 @@ workflows:
   explore:
     jobs:
       # - multiimage
-      # - pass-env-vars-sidecar
-      - docker-compose-connect
+      - pass-env-vars-sidecar
+      # - docker-compose-connect
