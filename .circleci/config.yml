@@ -75,12 +75,13 @@ jobs:
             # attach our sidecar DB container into the same network as our main job container, so they can communicate "locally"
             # NOTE: we are passing the env vars directly from the job container to our sidecar container
             # NOTE: using `&` to explicitly put this in the background (instead of using the --detach option)
-            docker container run --name=db --network "container:$CNTR_ID_MAIN" -e POSTGRES_DB -e POSTGRES_USER -e POSTGRES_PASSWORD postgres:13.10 &
-            sleep 5
-      - run:
-          name: DB logs (tailed)
-          command: docker container logs --follow db
-          background: true
+            docker container run --name=db --network "container:$CNTR_ID_MAIN" -e POSTGRES_DB -e POSTGRES_USER -e POSTGRES_PASSWORD postgres:13.10 > cntr.log 2>&1  &
+            sleep 5            
+      # - run:
+      #     name: DB logs (tailed)
+      #     command: docker container logs --follow db
+      #     background: true
+      - run: exit 1
       - run:
           name: Wait for DB to be ready
           command: |
